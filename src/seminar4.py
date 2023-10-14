@@ -47,7 +47,7 @@ class Momentum(Optimizer):
             self.velocity = np.zeros_like(d_w)
         # TODO Update W with d_W and velocity:
         new_velocity = self.rho * self.velocity + d_w
-        w -= new_velocity
+        w -= new_velocity * learning_rate
         self.velocity = new_velocity
 
 
@@ -229,8 +229,8 @@ if __name__ == '__main__':
                                 ReLULayer(),
                                 DenseLayer(n_hidden, n_output)])
 
-neural_net.setup_optimizer(SGD())
+#neural_net.setup_optimizer(SGD())
 
-loss_history = neural_net.fit(x_train, y_train, num_iters=300, batch_size=32)
-loss_history = make_report(neural_net)
+#loss_history = neural_net.fit(x_train, y_train, num_iters=300, batch_size=32)
+#loss_history = make_report(neural_net)
 # visualize_loss(loss_history, out_fir='output/seminar4')
