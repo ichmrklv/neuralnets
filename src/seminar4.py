@@ -272,7 +272,6 @@ Test accuracy: {neural_net.evaluate(x_test, y_test)}
     print(report)
 
     out_dir = 'seminar4'
-
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
