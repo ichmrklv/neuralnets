@@ -276,6 +276,7 @@ Test accuracy: {neural_net.evaluate(x_test, y_test)}
         os.makedirs(out_dir)
 
     report_path = os.path.join(out_dir, 'report.md')
+
     with open(report_path, 'w') as f:
         f.write(report)
 
