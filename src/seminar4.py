@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 
 from seminar3 import *
-from test_utils import get_preprocessed_data
+from test_utils import get_preprocessed_data, visualize_weights, visualize_loss
+
+import datetime
+from tqdm import tqdm
+import os.path
 
 epsilon = 1e-3
 
@@ -183,7 +187,7 @@ class NeuralNetwork:
     def fit(self, X, y, learning_rate=1e-3, num_iters=10000, batch_size=4, verbose=True):
         num_classes = np.max(y) + 1
         loss_history = []
-        for it in range(num_iters):
+        for it in tqdm(range(num_iters)):
             idxs = np.random.choice(num_classes, batch_size)
             X_batch, y_batch = X[idxs], y[idxs]
             # evaluate loss and gradient
@@ -217,20 +221,63 @@ class NeuralNetwork:
         accuracy = np.mean(y_predicted == y)
         return accuracy
 
+'''
+        The architecture of this neural network includes:
+ 1. fully connected layers,
+ 2. the 'Dropout' method for regularization, 
+ 3. 'Batch Normalization' for data normalization,
+ 4. the ReLU activation function, 
+ 5. a layer for obtaining output data.
+'''
 
 if __name__ == '__main__':
     """1 point"""
     (x_train, y_train), (x_test, y_test) = get_preprocessed_data(include_bias=False)
     # Train your neural net!
     n_input, n_output, n_hidden = 3072, 10, 256
+
+    learning_rate = 0.001
+    num_iters = 1000
+    batch_size = 64
+
     neural_net = NeuralNetwork([DenseLayer(n_input, n_hidden),
                                 DropoutLayer(0.5),
                                 BatchNormLayer(n_hidden),
                                 ReLULayer(),
                                 DenseLayer(n_hidden, n_output)])
 
-#neural_net.setup_optimizer(SGD())
+    neural_net.setup_optimizer(SGD())
+    t0 = datetime.datetime.now()
+    loss_history = neural_net.fit(x_train, y_train,
+                                  learning_rate, num_iters, batch_size, verbose=True)
+    t1 = datetime.datetime.now()
+    dt = t1 - t0
 
-#loss_history = neural_net.fit(x_train, y_train, num_iters=300, batch_size=32)
-#loss_history = make_report(neural_net)
-# visualize_loss(loss_history, out_fir='output/seminar4')
+    report = f"""# Training (seminar 4)  
+datetime: {t1.isoformat(' ', 'seconds')}  
+Well done in: {dt.seconds} seconds  
+learning_rate = {learning_rate}  
+
+num_iters = {num_iters}  
+batch_size = {batch_size}  
+
+Final loss: {loss_history[-1]}   
+Train accuracy: {neural_net.evaluate(x_train, y_train)}   
+Test accuracy: {neural_net.evaluate(x_test, y_test)}  
+
+<img src="weights.png">  
+<br>
+<img src="loss.png">
+"""
+    print(report)
+
+    out_dir = 'seminar4'
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    report_path = os.path.join(out_dir, 'report.md')
+    with open(report_path, 'w') as f:
+        f.write(report)
+
+    visualize_loss(loss_history, out_dir)
