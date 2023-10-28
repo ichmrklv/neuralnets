@@ -270,7 +270,7 @@ Test accuracy: {neural_net.evaluate(x_test, y_test)}
 <img src="loss.png">
 """
     print(report)
-    out_dir = 'seminar4'
+    out_dir = 'output/seminar4'
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
