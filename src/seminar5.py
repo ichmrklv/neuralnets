@@ -15,7 +15,7 @@ def build_conv_layer() -> tf.keras.layers.Conv2D:
     :return: keras convolutional layer
     """
     # TODO Create layer with necessary filters, kernel size and striding step
-    my_layer = None
+    my_layer = tf.keras.layers.Conv2D(kernel_size=(5, 5), strides=5, filters=2)
 
     return my_layer
 
