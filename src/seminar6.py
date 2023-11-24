@@ -22,7 +22,7 @@ BUCKET_NAME = 'neuralnets2023'
 YOUR_GIT_USER = 'ichmrklv'
 
 image_size = (180, 180)
-batch_size = 128
+batch_size = 64
 
 def download_data():
     """Pipeline: download and extract data"""
@@ -40,9 +40,52 @@ def download_data():
         print('Data is already extracted!')
 
 
-#def make_model(input_shape, num_classes):
- #   model = None
-  #  return model
+def get_data(augmentation=True):
+    num_skipped = 0
+    path_to_images = os.path.join(PATH_TO_DATA, "PetImages")
+    for folder_name in ("Cat", "Dog"):
+        folder_path = os.path.join(path_to_images, folder_name)
+        for fname in os.listdir(folder_path):
+            fpath = os.path.join(folder_path, fname)
+            try:
+                fobj = open(fpath, "rb")
+                is_jfif = tf.compat.as_bytes("JFIF") in fobj.peek(10)
+            finally:
+                fobj.close()
+
+            if not is_jfif:
+                num_skipped += 1
+                # Delete corrupted image
+                os.remove(fpath)
+
+    print("Deleted %d images" % num_skipped)
+
+    train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
+        path_to_images,
+        validation_split=0.2,
+        subset="both",
+        seed=1337,
+        image_size=image_size,
+        batch_size=batch_size,
+    )
+
+    if augmentation:
+        data_augmentation = keras.Sequential(
+            [
+                layers.RandomFlip("horizontal"),
+                layers.RandomRotation(0.1),
+            ]
+        )
+        train_ds = train_ds.map(
+            lambda img, label: (data_augmentation(img), label),
+            num_parallel_calls=tf.data.AUTOTUNE,
+        )
+
+    # Prefetching samples in GPU memory helps maximize GPU utilization.
+    train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+    val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+
+    return train_ds, val_ds
 
 def make_model(input_shape, num_classes):
     inputs = keras.Input(shape=input_shape)
@@ -94,24 +137,16 @@ def train():
     # Todo: Copy some code from seminar5 and https://keras.io/examples/vision/image_classification_from_scratch/
     print('Training model')
 
-    train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
-        os.path.join(PATH_TO_DATA, "PetImages"),
-        validation_split=0.2,
-        subset="both",
-        seed=1337,
-        image_size=image_size,
-        batch_size=batch_size,
-    )
+    train_ds, val_ds = get_data(augmentation=True)
 
-    model = make_model(input_shape=image_size + (3,), num_classes=1)  # 0 - cat, 1 - dog
-    keras.utils.plot_model(model, show_shapes=True)
+    model = make_model(input_shape=[*image_size, 3], num_classes=2)
+    epochs = 5
 
-    epochs = 25
     callbacks = [
-        keras.callbacks.ModelCheckpoint("save_at_{epoch}.keras"),
+        tf.keras.callbacks.ModelCheckpoint("save_at_{epoch}.keras"),
     ]
     model.compile(
-        optimizer=keras.optimizers.Adam(1e-3),
+        optimizer=tf.keras.optimizers.Adam(1e-3),
         loss="binary_crossentropy",
         metrics=["accuracy"],
     )
@@ -121,6 +156,7 @@ def train():
         callbacks=callbacks,
         validation_data=val_ds,
     )
+    model.save(PATH_TO_MODEL)
 
 
 def upload():
