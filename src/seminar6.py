@@ -18,7 +18,7 @@ PATH_TO_DATA_ZIP = 'data/raw/cats_dogs_train.zip'
 PATH_TO_DATA = 'data/raw/cats_dogs_train'
 PATH_TO_MODEL = 'models/model_6'
 BUCKET_NAME = 'neuralnets2023'
-# todo fix your git user name and copy .env to project root
+# todo fix your git user name and copy ..env to project root
 YOUR_GIT_USER = 'ichmrklv'
 
 image_size = (180, 180)
@@ -167,7 +167,7 @@ def upload():
                         format='zip',
                         root_dir=PATH_TO_MODEL)
 
-    config = dotenv.dotenv_values('.env')
+    config = dotenv.dotenv_values('..env')
 
     ACCESS_KEY = config['ACCESS_KEY']
     SECRET_KEY = config['SECRET_KEY']
